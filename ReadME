@@ -1,8 +1,8 @@
-# HandPresenceVR
+HandPresenceVR-
 HandPresenceVr is a package made with the intention to have different models for hands depending on the controller and the headset.
 
-## Installation
+Installation-
 To install the package you need to download it from the Github page (download the newest release) and just drug it into the unity game engine (2019.3.13f or higher).
 
-## Creator
-[AgentPotatoDev](https://github.com/AgentPotatoDev)
+Creator--
+AgentPotatoDev - https://github.com/AgentPotatoDev
