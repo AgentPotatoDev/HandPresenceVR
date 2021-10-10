@@ -9,12 +9,22 @@ using UnityEngine.XR;
 //feel free to use this script anywhere.
 public class HandPresence : MonoBehaviour
 {
+    public bool showController = false;
     public InputDeviceCharacteristics controllerCharacteristics;
     public List<GameObject> controllerPrefabs;
+    public GameObject handModelPrefab;
+
     private InputDevice targetDevice;
     private GameObject spawnedController;
-    
+    private GameObject spawnedHandModel;
+    private Animator handAnimator;
+
     void Start()
+    {
+        TryInitialize();
+    }
+
+    void TryInitialize()
     {
         List<InputDevice> devices = new List<InputDevice>();
         InputDevices.GetDevicesWithCharacteristics(controllerCharacteristics, devices);
@@ -24,8 +34,10 @@ public class HandPresence : MonoBehaviour
             Debug.Log(item.name + item.characteristics);
         }
 
+        //checks if there is more the 0 devices (controllers)
         if (devices.Count > 0)
         {
+            //spawns the target prefab for the name
             targetDevice = devices[0];
             GameObject prefab = controllerPrefabs.Find(controller => controller.name == targetDevice.name);
             if (prefab)
@@ -37,26 +49,58 @@ public class HandPresence : MonoBehaviour
                 Debug.Log("Did not find corresponding controller model");
                 spawnedController = Instantiate(controllerPrefabs[0], transform);
             }
+
+            spawnedHandModel = Instantiate(handModelPrefab, transform);
+            handAnimator = spawnedHandModel.GetComponent<Animator>();
         }
-    }
+
+        void UpdateHandAniamtion()
+        {
+            //changes the trigger float from the animator using the trigger button
+            if (targetDevice.TryGetFeatureValue(CommonUsages.trigger, out float triggerValue))
+            {
+                handAnimator.SetFloat("Trigger", triggerValue);
+            }
+            else
+            {
+                handAnimator.SetFloat("Trigger", 0);
+            }
+
+            //changes the grip float from the animator using the grip button
+            if (targetDevice.TryGetFeatureValue(CommonUsages.grip, out float gripValue))
+            {
+                handAnimator.SetFloat("Grip", gripValue);
+            }
+            else
+            {
+                handAnimator.SetFloat("Grip", 0);
+            }
+        }
 
 
-    void Update()
-    {
-        //gets input from primary button
-        if (targetDevice.TryGetFeatureValue(CommonUsages.primaryButton, out bool primaryButtonValue) && primaryButtonValue)
+        //input from controller 
+        void Update()
         {
-            Debug.Log("Pressing primary button");
-        }
-        //gets input from primary trigger
-        if (targetDevice.TryGetFeatureValue(CommonUsages.trigger, out float triggerValue) && triggerValue > 0.1f)
-        {
-            Debug.Log("Trigger pressed "+ triggerValue);
-        }
-        //gets input from primary joystick / touchpad
-        if (targetDevice.TryGetFeatureValue(CommonUsages.primary2DAxis, out Vector2 primary2DAxisValue) && primary2DAxisValue != Vector2.zero)
-        {
-            Debug.Log("Primary touchpad " + primary2DAxisValue);
+            if (!targetDevice.isValid)
+            {
+                TryInitialize();
+            }
+            else
+            {
+                //show controller or hands
+                if (showController)
+                {
+                    spawnedHandModel.SetActive(false);
+                    spawnedController.SetActive(true);
+                }
+                else
+                {
+                    spawnedHandModel.SetActive(true);
+                    spawnedController.SetActive(false);
+                    UpdateHandAniamtion();
+                }
+            }
+
         }
     }
 }
